@@ -1,0 +1,27 @@
+[2026-02-26 22:59:28] ============================================================
+[2026-02-26 22:59:28] CONTINUOUS MONITORING MODE STARTED
+[2026-02-26 22:59:28] Ping interval: 60 seconds
+[2026-02-26 22:59:28] Press Ctrl+C to stop
+[2026-02-26 22:59:28] ============================================================
+[2026-02-26 22:59:28] 
+--- Cycle #1 ---
+[2026-02-26 22:59:28] Pinging 2 device(s)...
+[2026-02-26 22:59:28]   → Abnormal site (192.168.0.1)...
+[2026-02-26 22:59:28]     ✗ OFFLINE - Error: [Errno 2] No such file or directory: 'ping'
+[2026-02-26 22:59:28]   → Normal site (127.0.0.1)...
+[2026-02-26 22:59:28]     ✗ OFFLINE - Error: [Errno 2] No such file or directory: 'ping'
+[2026-02-26 22:59:28] Waiting 60 seconds until next cycle...
+
+[2026-02-26 23:00:32] 
+--- Cycle #2 ---
+[2026-02-26 23:00:32] Pinging 2 device(s)...
+[2026-02-26 23:00:32]   → Abnormal site (192.168.0.1)...
+[2026-02-26 23:00:32]     ✗ OFFLINE - Error: [Errno 2] No such file or directory: 'ping'
+[2026-02-26 23:00:32]   → Normal site (127.0.0.1)...
+[2026-02-26 23:00:32]     ✗ OFFLINE - Error: [Errno 2] No such file or directory: 'ping'
+[2026-02-26 23:00:32] Waiting 60 seconds until next cycle...
+
+[2026-02-26 23:01:07] ============================================================
+[2026-02-26 23:01:07] CONTINUOUS MONITORING MODE STOPPED
+[2026-02-26 23:01:07] Total cycles completed: 2
+[2026-02-26 23:01:07] ============================================================
