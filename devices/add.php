@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 $_SESSION['device_added'] = 'Device "' . $name . '" has been added successfully';
-                header('Location: devices.php');
+                header('Location: index.php');
                 exit;
             }
         } catch (Exception $e) {
@@ -57,13 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Network Monitor - Add Device';
 $active_page = 'devices';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -71,17 +71,17 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Add Device</h1>
-                        <a href="devices.php" class="btn btn-secondary">
+                        <a href="index.php" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Devices
                         </a>
                     </div>
@@ -138,7 +138,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Add Device
                                         </button>
-                                        <a href="devices.php" class="btn btn-secondary">
+                                        <a href="index.php" class="btn btn-secondary">
                                             <i class="fas fa-times"></i> Cancel
                                         </a>
                                     </form>
@@ -153,4 +153,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

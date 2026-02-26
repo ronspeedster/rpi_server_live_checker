@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -41,11 +41,11 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Page settings
 $page_title = 'Network Monitor - User Management';
 $active_page = 'users';
-$page_styles = '<link href="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">';
+$page_styles = '<link href="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">';
 $page_scripts = '
     <!-- Page level plugins -->
-    <script src="sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
     
     <!-- Page level custom scripts -->
     <script>
@@ -55,13 +55,13 @@ $page_scripts = '
     </script>
 ';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -69,17 +69,17 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">User Management</h1>
-                        <a href="user_add.php" class="btn btn-primary btn-icon-split">
+                        <a href="add.php" class="btn btn-primary btn-icon-split">
                             <span class="icon text-white-50">
                                 <i class="fas fa-plus"></i>
                             </span>
@@ -132,12 +132,12 @@ require_once __DIR__ . '/includes/header.php';
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <a href="user_edit.php?id=<?php echo $user['id']; ?>" 
+                                                    <a href="edit.php?id=<?php echo $user['id']; ?>" 
                                                        class="btn btn-sm btn-info" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                                        <a href="user_delete.php?id=<?php echo $user['id']; ?>" 
+                                                        <a href="delete.php?id=<?php echo $user['id']; ?>" 
                                                            class="btn btn-sm btn-danger" 
                                                            onclick="return confirm('Are you sure you want to delete this user?');"
                                                            title="Delete">
@@ -163,4 +163,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

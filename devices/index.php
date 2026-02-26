@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -42,11 +42,11 @@ $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $page_title = 'Network Monitor - Devices';
 $active_page = 'devices';
 $page_styles = '
-<link href="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link href="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 ';
 $page_scripts = '
-<script src="sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 <script>
 $(document).ready(function() {
     $("#devicesTable").DataTable();
@@ -54,13 +54,13 @@ $(document).ready(function() {
 </script>
 ';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -68,17 +68,17 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Devices</h1>
-                        <a href="device_add.php" class="btn btn-primary btn-icon-split">
+                        <a href="add.php" class="btn btn-primary btn-icon-split">
                             <span class="icon text-white-50">
                                 <i class="fas fa-plus"></i>
                             </span>
@@ -121,10 +121,10 @@ require_once __DIR__ . '/includes/header.php';
                                             </td>
                                             <td><?php echo htmlspecialchars($device['created_at']); ?></td>
                                             <td>
-                                                <a href="device_edit.php?id=<?php echo $device['id']; ?>" class="btn btn-sm btn-primary">
+                                                <a href="edit.php?id=<?php echo $device['id']; ?>" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="device_delete.php?id=<?php echo $device['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this device?');">
+                                                <a href="delete.php?id=<?php echo $device['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this device?');">
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                             </td>
@@ -142,4 +142,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

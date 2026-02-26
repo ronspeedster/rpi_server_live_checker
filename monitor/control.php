@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -15,10 +15,10 @@ $need_password_change = $_SESSION['need_password_change'] ?? 0;
 $success_msg = '';
 $error_msg = '';
 
-// Paths
-$script_path = __DIR__ . '/scripts/ping_devices.py';
-$pid_file = __DIR__ . '/data/monitor.pid';
-$log_file = __DIR__ . '/data/monitor.log';
+// Paths (relative to project root since we're in monitor/ subfolder)
+$script_path = __DIR__ . '/../scripts/ping_devices.py';
+$pid_file = __DIR__ . '/../data/monitor.pid';
+$log_file = __DIR__ . '/../data/monitor.log';
 
 // Check if monitoring is running
 function is_monitoring_running() {
@@ -126,13 +126,13 @@ if (file_exists($log_file)) {
 $page_title = 'Network Monitor - Monitor Control';
 $active_page = 'monitor_control';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -140,12 +140,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -206,7 +206,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
                                 </div>
                                 <div class="card-body">
-                                    <a href="monitor_logs.php" class="btn btn-info btn-block mb-3">
+                                    <a href="logs.php" class="btn btn-info btn-block mb-3">
                                         <i class="fas fa-stream"></i> View Live Logs
                                     </a>
                                     
@@ -214,7 +214,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <i class="fas fa-list"></i> View Historical Logs
                                     </a>
                                     
-                                    <a href="devices.php" class="btn btn-secondary btn-block">
+                                    <a href="../devices/" class="btn btn-secondary btn-block">
                                         <i class="fas fa-server"></i> Manage Devices
                                     </a>
                                     
@@ -226,7 +226,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <strong>Status:</strong> <span class="badge badge-success">Exists</span><br>
                                             <strong>Size:</strong> <?php echo number_format($log_size / 1024, 2); ?> KB
                                         </p>
-                                        <a href="<?php echo 'data/monitor.log'; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <a href="<?php echo BASE_PATH . 'data/monitor.log'; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                             <i class="fas fa-download"></i> Download Log
                                         </a>
                                     <?php else: ?>
@@ -269,4 +269,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

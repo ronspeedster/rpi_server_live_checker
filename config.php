@@ -5,6 +5,14 @@ session_start();
 define('DB_DIR', __DIR__ . '/data');
 define('DB_PATH', DB_DIR . '/network_monitor.sqlite');
 
+// Calculate base path for assets (relative to current script location)
+// Count how many directories deep from project root
+$project_root = __DIR__;
+$script_path = realpath($_SERVER['SCRIPT_FILENAME']);
+$relative = str_replace($project_root, '', dirname($script_path));
+$depth = $relative ? substr_count($relative, DIRECTORY_SEPARATOR) : 0;
+define('BASE_PATH', str_repeat('../', $depth));
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;

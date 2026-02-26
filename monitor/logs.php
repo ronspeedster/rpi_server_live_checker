@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -75,13 +75,13 @@ $page_styles = '
 </style>
 ';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -89,12 +89,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -106,7 +106,7 @@ require_once __DIR__ . '/includes/header.php';
                             <button class="btn btn-secondary" id="clear-logs">
                                 <i class="fas fa-eraser"></i> Clear
                             </button>
-                            <a href="monitor_control.php" class="btn btn-primary">
+                            <a href="control.php" class="btn btn-primary">
                                 <i class="fas fa-cog"></i> Control Panel
                             </a>
                         </div>
@@ -140,7 +140,7 @@ require_once __DIR__ . '/includes/header.php';
                         <i class="fas fa-info-circle"></i> 
                         This page shows real-time output from the monitoring service. 
                         If no logs appear, make sure the monitoring service is running from the 
-                        <a href="monitor_control.php">Control Panel</a>.
+                        <a href="control.php">Control Panel</a>.
                     </div>
 
                 </div>
@@ -216,10 +216,15 @@ function updateStatus(connected) {
 // Poll for new logs
 function pollLogs() {
     fetch("stream_logs.php?position=" + lastPosition)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.content) {
-                const lines = data.content.split("\\n");
+                const lines = data.content.split(/\r?\n/);
                 lines.forEach(line => {
                     if (line.trim()) {
                         logContainer.innerHTML += formatLogLine(line);
@@ -249,5 +254,5 @@ setInterval(pollLogs, 1000); // Poll every second
 </script>
 ';
 
-require_once __DIR__ . '/includes/footer.php';
+require_once __DIR__ . '/../includes/footer.php';
 ?>

@@ -2,7 +2,7 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.php">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?php echo BASE_PATH; ?>dashboard.php">
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-network-wired"></i>
         </div>
@@ -14,7 +14,7 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item<?php echo ($active_page === 'dashboard') ? ' active' : ''; ?>">
-        <a class="nav-link" href="dashboard.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>dashboard.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span></a>
     </li>
@@ -29,14 +29,14 @@
 
     <!-- Nav Item - Monitor Control -->
     <li class="nav-item<?php echo ($active_page === 'monitor_control' || $active_page === 'monitor_logs') ? ' active' : ''; ?>">
-        <a class="nav-link" href="monitor_control.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>monitor/control.php">
             <i class="fas fa-fw fa-play-circle"></i>
             <span>Monitor Control</span></a>
     </li>
 
     <!-- Nav Item - Logs -->
     <li class="nav-item<?php echo ($active_page === 'logs') ? ' active' : ''; ?>">
-        <a class="nav-link" href="logs.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>monitor/history.php">
             <i class="fas fa-fw fa-list"></i>
             <span>Ping Logs</span></a>
     </li>
@@ -51,14 +51,14 @@
 
     <!-- Nav Item - Devices -->
     <li class="nav-item<?php echo ($active_page === 'devices') ? ' active' : ''; ?>">
-        <a class="nav-link" href="devices.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>devices/">
             <i class="fas fa-fw fa-server"></i>
             <span>Devices</span></a>
     </li>
 
     <!-- Nav Item - Users -->
     <li class="nav-item<?php echo ($active_page === 'users') ? ' active' : ''; ?>">
-        <a class="nav-link" href="users.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>users/">
             <i class="fas fa-fw fa-users"></i>
             <span>User Management</span></a>
     </li>
@@ -73,7 +73,7 @@
 
     <!-- Nav Item - Change Password -->
     <li class="nav-item<?php echo ($active_page === 'change_password') ? ' active' : ''; ?>">
-        <a class="nav-link" href="change_password.php">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>change_password.php">
             <i class="fas fa-fw fa-key"></i>
             <span>Change Password</span></a>
     </li>

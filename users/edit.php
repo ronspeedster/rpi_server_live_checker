@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -15,7 +15,7 @@ $error = '';
 $user_id = intval($_GET['id'] ?? 0);
 
 if (!$user_id) {
-    header('Location: users.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -28,7 +28,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
     $_SESSION['user_error'] = 'User not found';
-    header('Location: users.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $_SESSION['user_updated'] = 'User "' . $new_username . '" has been updated successfully';
-                header('Location: users.php');
+                header('Location: index.php');
                 exit;
             }
         } catch (Exception $e) {
@@ -118,13 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Network Monitor - Edit User';
 $active_page = 'users';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -132,7 +132,7 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
@@ -140,7 +140,7 @@ require_once __DIR__ . '/includes/header.php';
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Edit User</h1>
-                        <a href="users.php" class="btn btn-secondary btn-icon-split">
+                        <a href="index.php" class="btn btn-secondary btn-icon-split">
                             <span class="icon text-white-50">
                                 <i class="fas fa-arrow-left"></i>
                             </span>
@@ -174,7 +174,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <h6 class="m-0 font-weight-bold text-primary">User Information</h6>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="user_edit.php?id=<?php echo $user_id; ?>">
+                                    <form method="POST" action="edit.php?id=<?php echo $user_id; ?>">
                                         <div class="form-group">
                                             <label for="username">Username <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="username" 
@@ -240,7 +240,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Update User
                                         </button>
-                                        <a href="users.php" class="btn btn-secondary">
+                                        <a href="index.php" class="btn btn-secondary">
                                             <i class="fas fa-times"></i> Cancel
                                         </a>
                                     </form>
@@ -290,4 +290,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
