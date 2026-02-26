@@ -1,1 +1,3 @@
 .DS_Store
+data/monitor.log
+data/network_monitor.sqlite
