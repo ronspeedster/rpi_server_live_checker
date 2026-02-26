@@ -9,6 +9,13 @@
     <!-- Topbar Navbar -->
     <ul class="navbar-nav ml-auto">
 
+        <!-- Theme Toggle -->
+        <li class="nav-item no-arrow mx-1">
+            <button class="btn btn-link nav-link" id="themeToggle" title="Toggle Dark Mode">
+                <i class="fas fa-moon fa-fw"></i>
+            </button>
+        </li>
+
         <div class="topbar-divider d-none d-sm-block"></div>
 
         <!-- Nav Item - User Information -->

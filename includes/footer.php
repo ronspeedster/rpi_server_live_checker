@@ -29,6 +29,45 @@
     <!-- Custom scripts for all pages-->
     <script src="sb_admin_theme/js/sb-admin-2.min.js"></script>
 
+    <!-- Theme Toggle Script -->
+    <script>
+        // Theme Toggle Functionality
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const themeIcon = themeToggle.querySelector('i');
+            
+            // Check for saved theme preference or default to light mode
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            
+            // Apply the saved theme on page load
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeToggle.setAttribute('title', 'Toggle Light Mode');
+            }
+            
+            // Toggle theme on button click
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-mode');
+                
+                // Update icon and save preference
+                if (body.classList.contains('dark-mode')) {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    themeToggle.setAttribute('title', 'Toggle Light Mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    themeToggle.setAttribute('title', 'Toggle Dark Mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        })();
+    </script>
+
     <?php if (isset($page_scripts)): ?>
         <!-- Page level plugins/scripts -->
         <?php echo $page_scripts; ?>
