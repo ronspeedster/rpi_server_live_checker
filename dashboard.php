@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $username = $_SESSION['username'];
+$first_name = $_SESSION['first_name'] ?? 'User';
+$last_name = $_SESSION['last_name'] ?? '';
 $need_password_change = $_SESSION['need_password_change'] ?? 0;
 
 // Page settings

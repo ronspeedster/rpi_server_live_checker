@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $username = $_SESSION['username'];
+$first_name = $_SESSION['first_name'] ?? 'User';
+$last_name = $_SESSION['last_name'] ?? '';
 $need_password_change = $_SESSION['need_password_change'] ?? 0;
 
 // Get session messages
@@ -33,7 +35,7 @@ if (isset($_SESSION['user_error'])) {
 
 // Fetch all users
 $pdo = db();
-$stmt = $pdo->query("SELECT id, username, role, need_password_change, created_at FROM users ORDER BY created_at DESC");
+$stmt = $pdo->query("SELECT id, username, first_name, last_name, email, role, need_password_change, created_at FROM users ORDER BY created_at DESC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Page settings
@@ -97,9 +99,11 @@ require_once __DIR__ . '/includes/header.php';
                                         <tr>
                                             <th>ID</th>
                                             <th>Username</th>
+                                            <th>First Name</th>
+                                            <th>Last Name</th>
+                                            <th>Email</th>
                                             <th>Role</th>
                                             <th>Password Status</th>
-                                            <th>Created At</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -108,6 +112,9 @@ require_once __DIR__ . '/includes/header.php';
                                             <tr>
                                                 <td><?php echo htmlspecialchars($user['id']); ?></td>
                                                 <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                                <td><?php echo htmlspecialchars($user['first_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($user['last_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($user['email'] ?? '-'); ?></td>
                                                 <td>
                                                     <span class="badge badge-primary">
                                                         <?php echo htmlspecialchars($user['role']); ?>
@@ -124,7 +131,6 @@ require_once __DIR__ . '/includes/header.php';
                                                         </span>
                                                     <?php endif; ?>
                                                 </td>
-                                                <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                                                 <td>
                                                     <a href="user_edit.php?id=<?php echo $user['id']; ?>" 
                                                        class="btn btn-sm btn-info" title="Edit">

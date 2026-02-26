@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $username = $_SESSION['username'];
+$first_name = $_SESSION['first_name'] ?? 'User';
+$last_name = $_SESSION['last_name'] ?? '';
 $user_id = $_SESSION['user_id'];
 $success = '';
 $error = '';

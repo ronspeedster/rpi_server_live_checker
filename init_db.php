@@ -17,6 +17,9 @@ function init_db(PDO $pdo): void {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
+            first_name TEXT NOT NULL DEFAULT 'Default First Name',
+            last_name TEXT NOT NULL DEFAULT 'Default Last Name',
+            email TEXT,
             role TEXT NOT NULL DEFAULT 'admin',
             need_password_change INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -71,6 +74,6 @@ function init_db(PDO $pdo): void {
     $defaultPass = 'admin'; // <-- MUST change after first login
     $hash = password_hash($defaultPass, PASSWORD_DEFAULT);
 
-    $stmt = $pdo->prepare("INSERT INTO users(username, password_hash, role, need_password_change) VALUES (:u, :p, 'admin', 1)");
+    $stmt = $pdo->prepare("INSERT INTO users(username, password_hash, first_name, last_name, role, need_password_change) VALUES (:u, :p, 'Default First Name', 'Default Last Name', 'admin', 1)");
     $stmt->execute([':u' => $defaultUser, ':p' => $hash]);
 }

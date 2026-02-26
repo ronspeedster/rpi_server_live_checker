@@ -8,23 +8,30 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $username = $_SESSION['username'];
+$first_name = $_SESSION['first_name'] ?? 'User';
+$last_name = $_SESSION['last_name'] ?? '';
 $success = '';
 $error = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_username = trim($_POST['username'] ?? '');
+    $first_name = trim($_POST['first_name'] ?? '');
+    $last_name = trim($_POST['last_name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $new_password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $role = $_POST['role'] ?? 'admin';
     $need_password_change = isset($_POST['need_password_change']) ? 1 : 0;
 
-    if (!$new_username || !$new_password || !$confirm_password) {
-        $error = 'All fields are required';
+    if (!$new_username || !$first_name || !$last_name || !$new_password || !$confirm_password) {
+        $error = 'Username, first name, last name, and passwords are required';
     } elseif ($new_password !== $confirm_password) {
         $error = 'Passwords do not match';
     } elseif (strlen($new_password) < 6) {
         $error = 'Password must be at least 6 characters long';
+    } elseif ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Invalid email address';
     } else {
         try {
             $pdo = db();
@@ -37,10 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Insert new user
                 $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, role, need_password_change) VALUES (:username, :password_hash, :role, :need_password_change)");
+                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, first_name, last_name, email, role, need_password_change) VALUES (:username, :password_hash, :first_name, :last_name, :email, :role, :need_password_change)");
                 $stmt->execute([
                     ':username' => $new_username,
                     ':password_hash' => $password_hash,
+                    ':first_name' => $first_name,
+                    ':last_name' => $last_name,
+                    ':email' => $email ?: null,
                     ':role' => $role,
                     ':need_password_change' => $need_password_change
                 ]);
@@ -112,6 +122,28 @@ require_once __DIR__ . '/includes/header.php';
                                             <input type="text" class="form-control" id="username" 
                                                    name="username" required 
                                                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="first_name" 
+                                                   name="first_name" required 
+                                                   value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="last_name" 
+                                                   name="last_name" required 
+                                                   value="<?php echo htmlspecialchars($_POST['last_name'] ?? ''); ?>">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="email" class="form-control" id="email" 
+                                                   name="email" 
+                                                   value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                                            <small class="form-text text-muted">Optional - Used for password recovery</small>
                                         </div>
 
                                         <div class="form-group">

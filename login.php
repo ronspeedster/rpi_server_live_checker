@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username && $password) {
         try {
             $pdo = db();
-            $stmt = $pdo->prepare("SELECT id, username, password_hash, need_password_change FROM users WHERE username = :username");
+            $stmt = $pdo->prepare("SELECT id, username, password_hash, need_password_change, first_name, last_name FROM users WHERE username = :username");
             $stmt->execute([':username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['need_password_change'] = $user['need_password_change'];
+                $_SESSION['first_name'] = $user['first_name'];
+                $_SESSION['last_name'] = $user['last_name'];
 
                 header('Location: dashboard.php');
                 exit;
@@ -115,6 +117,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             Login
                                         </button>
                                     </form>
+                                    <hr>
+                                    <div class="text-center">
+                                        <a class="small" href="#" onclick="alert('Password reset feature coming soon!'); return false;">Forgot Password?</a>
+                                    </div>
                                     <hr>
                                     <div class="text-center">
                                         <small class="text-muted">Default credentials: admin / admin</small>
