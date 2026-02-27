@@ -94,7 +94,7 @@ $sendTest = isset($_GET['send']);
         <?php if ($sendTest): ?>
             <?php
             // Send test email
-            $subject = "Test Email from Network Monitor";
+            $subject = "Test Email from RPi Server Live Checker";
             $body = EmailHelper::createAlertEmailBody(
                 "Test Device",
                 "192.168.1.100",
@@ -170,7 +170,7 @@ $sendTest = isset($_GET['send']);
 define('SMTP_USERNAME', 'your-email@gmail.com');
 define('SMTP_PASSWORD', 'your-app-password-here'); // 16-char App Password
 define('SMTP_FROM_EMAIL', 'your-email@gmail.com');
-define('SMTP_FROM_NAME', 'Network Monitor Alert');</div>
+define('SMTP_FROM_NAME', 'RPi Server Live Checker');</div>
         
         <h3>Step 4: Test Your Configuration</h3>
         <p>Use the form above to send a test email and verify everything is working.</p>

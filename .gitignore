@@ -5,6 +5,9 @@ data/network_monitor.sqlite
 # Email credentials - DO NOT COMMIT
 config.email.php
 
+# SMS credentials - DO NOT COMMIT
+config.sms.php
+
 # Vendor directory (if using Composer)
 vendor/
 

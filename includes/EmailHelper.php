@@ -199,7 +199,7 @@ class EmailHelper {
                     </div>" : "") . "
                 </div>
                 <div class='footer'>
-                    This is an automated message from Network Monitor System.<br>
+                    This is an automated message from RPi Server Live Checker.<br>
                     Please do not reply to this email.
                 </div>
             </div>

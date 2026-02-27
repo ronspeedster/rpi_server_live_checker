@@ -16,6 +16,8 @@ import argparse
 import signal
 import shutil
 import smtplib
+import requests
+import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
@@ -117,7 +119,7 @@ def send_email_alert(to_email, device_name, device_ip, alert_type="offline"):
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"⚠️ Device Alert: {device_name} is {alert_type.upper()}"
         msg["From"] = (
-            f"{config.get('from_name', 'Network Monitor')} <{config['from_email']}>"
+            f"{config.get('from_name', 'RPi Server Live Checker')} <{config['from_email']}>"
         )
         msg["To"] = to_email
 
@@ -167,7 +169,7 @@ def send_email_alert(to_email, device_name, device_ip, alert_type="offline"):
                     </div>
                 </div>
                 <div class='footer'>
-                    This is an automated message from Network Monitor System.<br>
+                    This is an automated message from RPi Server Live Checker.<br>
                     Please do not reply to this email.
                 </div>
             </div>
@@ -184,7 +186,7 @@ IP Address: {device_ip}
 Status: {alert_type.upper()}
 Time: {timestamp}
 
-This is an automated alert from your network monitoring system.
+This is an automated alert from RPi Server Live Checker.
         """
 
         msg.attach(MIMEText(text, "plain"))
@@ -200,6 +202,116 @@ This is an automated alert from your network monitoring system.
 
     except Exception as e:
         print(f"Error sending email: {e}", file=sys.stderr)
+        return False
+
+
+def load_sms_config():
+    """Load Twilio SMS configuration from PHP config file."""
+    config_file = Path(__file__).parent.parent / "config.sms.php"
+    config = {}
+
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+            # Parse PHP define() statements
+            patterns = {
+                "account_sid": r"define\('TWILIO_ACCOUNT_SID',\s*'([^']+)'\)",
+                "auth_token": r"define\('TWILIO_AUTH_TOKEN',\s*'([^']+)'\)",
+                "from_number": r"define\('TWILIO_FROM_NUMBER',\s*'([^']+)'\)",
+            }
+
+            for key, pattern in patterns.items():
+                match = re.search(pattern, content)
+                if match:
+                    config[key] = match.group(1)
+
+        return config if config else None
+    except Exception as e:
+        print(f"Warning: Could not load SMS config: {e}", file=sys.stderr)
+        return None
+
+
+def normalize_phone_number(phone):
+    """Normalize phone number to international format.
+    Supports Philippine (+63) and Australian (+61) numbers.
+    """
+    # Remove spaces and dashes
+    phone = re.sub(r'[\s\-]', '', phone)
+    
+    # ===== PHILIPPINE NUMBERS =====
+    # 09XXXXXXXXX -> +639XXXXXXXXX
+    if phone.startswith('09') and len(phone) == 11:
+        return '+63' + phone[1:]
+    # +639XXXXXXXXX (already correct)
+    elif phone.startswith('+639') and len(phone) == 13:
+        return phone
+    # 639XXXXXXXXX -> +639XXXXXXXXX
+    elif phone.startswith('639') and len(phone) == 12:
+        return '+' + phone
+    # 9XXXXXXXXX -> +639XXXXXXXXX
+    elif phone.startswith('9') and len(phone) == 10:
+        return '+63' + phone
+    
+    # ===== AUSTRALIAN NUMBERS =====
+    # 04XXXXXXXX -> +614XXXXXXXX
+    elif phone.startswith('04') and len(phone) == 10:
+        return '+61' + phone[1:]
+    # +614XXXXXXXX (already correct)
+    elif phone.startswith('+614') and len(phone) == 12:
+        return phone
+    # 614XXXXXXXX -> +614XXXXXXXX
+    elif phone.startswith('614') and len(phone) == 11:
+        return '+' + phone
+    # 4XXXXXXXX -> +614XXXXXXXX
+    elif phone.startswith('4') and len(phone) == 9:
+        return '+61' + phone
+    
+    return phone  # Return as-is if unknown format
+
+
+def send_sms_alert(to_phone, device_name, device_ip, alert_type="offline"):
+    """Send SMS alert via Twilio."""
+    config = load_sms_config()
+
+    if not config:
+        print("SMS config not available. Skipping SMS notification.", file=sys.stderr)
+        return False
+
+    try:
+        # Normalize phone number
+        to_phone = normalize_phone_number(to_phone)
+        
+        # Create SMS message
+        timestamp = datetime.now().strftime('%b %d, %I:%M %p')
+        message = f"ALERT: {device_name} ({device_ip}) is {alert_type.upper()} at {timestamp} - RPi Server Live Checker"
+
+        # Twilio API endpoint
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{config['account_sid']}/Messages.json"
+
+        # Prepare request
+        data = {
+            'From': config['from_number'],
+            'To': to_phone,
+            'Body': message
+        }
+
+        # Send with Basic Auth
+        response = requests.post(
+            url,
+            data=data,
+            auth=(config['account_sid'], config['auth_token']),
+            timeout=10
+        )
+
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            print(f"Twilio API error: {response.text}", file=sys.stderr)
+            return False
+
+    except Exception as e:
+        print(f"Error sending SMS: {e}", file=sys.stderr)
         return False
 
 
@@ -386,11 +498,29 @@ def send_notification(
             else:
                 log_message(f"    ❌ Failed to send email to {email}", log_file)
 
-    # SMS notification (placeholder for future implementation)
+    # Send SMS notification if enabled
     if device_settings["notify_sms"]:
-        log_message(
-            f"    📱 SMS notification configured (not yet implemented)", log_file
-        )
+        # Get recipient phone number(s)
+        user_id = device_settings["notify_sms_user_id"]
+
+        if user_id == 0 or user_id is None:
+            # Send to all users with phone numbers
+            cursor.execute(
+                "SELECT phone FROM users WHERE phone IS NOT NULL AND phone != ''"
+            )
+            phones = [row["phone"] for row in cursor.fetchall()]
+        else:
+            # Send to specific user
+            cursor.execute("SELECT phone FROM users WHERE id = ?", (user_id,))
+            user = cursor.fetchone()
+            phones = [user["phone"]] if user and user["phone"] else []
+
+        # Send SMS messages
+        for phone in phones:
+            if send_sms_alert(phone, device_name, device_ip):
+                log_message(f"    📱 SMS sent to {phone}", log_file)
+            else:
+                log_message(f"    ❌ Failed to send SMS to {phone}", log_file)
 
 
 def ping_device(ip_address, count=1, timeout=2):

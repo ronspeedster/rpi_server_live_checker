@@ -1,33 +1,26 @@
-[2026-02-27 22:08:35] ============================================================
-[2026-02-27 22:08:35] CONTINUOUS MONITORING MODE STARTED
-[2026-02-27 22:08:35] Ping interval: 60 seconds
-[2026-02-27 22:08:35] Press Ctrl+C to stop
-[2026-02-27 22:08:35] ============================================================
-[2026-02-27 22:08:35] 
+[2026-02-27 23:33:59] ============================================================
+[2026-02-27 23:33:59] CONTINUOUS MONITORING MODE STARTED
+[2026-02-27 23:33:59] Ping interval: 60 seconds
+[2026-02-27 23:33:59] Press Ctrl+C to stop
+[2026-02-27 23:33:59] ============================================================
+[2026-02-27 23:33:59] 
 --- Cycle #1 ---
-[2026-02-27 22:08:35] Pinging 3 device(s)...
-[2026-02-27 22:08:35]   -> Server 1 (192.168.0.1)...
-[2026-02-27 22:08:37]   ⚠️  ALERT CREATED: Server 1 offline for 5+ minutes
-[2026-02-27 22:08:44]     📧 Email sent to einorb03@gmail.com
-[2026-02-27 22:08:44]     📱 SMS notification configured (not yet implemented)
-[2026-02-27 22:08:44]     [FAIL] OFFLINE - Host unreachable or timeout
-[2026-02-27 22:08:44]   -> Server 2 (127.0.0.1)...
-[2026-02-27 22:08:44]     [OK] ONLINE - Ping successful
-[2026-02-27 22:08:44]   -> Server 3 (192.168.0.2)...
-[2026-02-27 22:08:45]   ⚠️  ALERT CREATED: Server 3 offline for 5+ minutes
-[2026-02-27 22:08:50]     📧 Email sent to einorb03@gmail.com
-[2026-02-27 22:08:50]     📱 SMS notification configured (not yet implemented)
-[2026-02-27 22:08:50]     [FAIL] OFFLINE - Host unreachable or timeout
-[2026-02-27 22:08:50] Waiting 60 seconds until next cycle...
+[2026-02-27 23:33:59] Pinging 3 device(s)...
+[2026-02-27 23:33:59]   -> Server 1 (192.168.0.1)...
+[2026-02-27 23:34:01]   ⚠️  ALERT CREATED: Server 1 offline for 5+ minutes
+[2026-02-27 23:34:07]     📧 Email sent to einorb03@gmail.com
+[2026-02-27 23:34:07]     📱 SMS sent to +61416398093
+[2026-02-27 23:34:07]     [FAIL] OFFLINE - Host unreachable or timeout
+[2026-02-27 23:34:07]   -> Server 2 (127.0.0.1)...
+[2026-02-27 23:34:07]     [OK] ONLINE - Ping successful
+[2026-02-27 23:34:07]   -> Server 3 (192.168.0.2)...
+[2026-02-27 23:34:09]   ⚠️  ALERT CREATED: Server 3 offline for 5+ minutes
+[2026-02-27 23:34:15]     📧 Email sent to einorb03@gmail.com
+[2026-02-27 23:34:16]     📱 SMS sent to +61416398093
+[2026-02-27 23:34:16]     [FAIL] OFFLINE - Host unreachable or timeout
+[2026-02-27 23:34:16] Waiting 60 seconds until next cycle...
 
-[2026-02-27 22:09:50] 
+[2026-02-27 23:35:16] 
 --- Cycle #2 ---
-[2026-02-27 22:09:50] Pinging 3 device(s)...
-[2026-02-27 22:09:50]   -> Server 1 (192.168.0.1)...
-[2026-02-27 22:09:52]     [FAIL] OFFLINE - Host unreachable or timeout
-[2026-02-27 22:09:52]   -> Server 2 (127.0.0.1)...
-[2026-02-27 22:09:52]     [OK] ONLINE - Ping successful
-[2026-02-27 22:09:52]   -> Server 3 (192.168.0.2)...
-[2026-02-27 22:09:54]     [FAIL] OFFLINE - Host unreachable or timeout
-[2026-02-27 22:09:54] Waiting 60 seconds until next cycle...
-
+[2026-02-27 23:35:16] Pinging 3 device(s)...
+[2026-02-27 23:35:16]   -> Server 1 (192.168.0.1)...

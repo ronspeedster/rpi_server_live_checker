@@ -90,14 +90,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Check if Python is available
-            $python = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
-            $python_check = PHP_OS_FAMILY === 'Windows' 
-                ? shell_exec("where $python 2>NUL") 
-                : shell_exec("which $python 2>/dev/null");
+            // First try virtual environment (preferred)
+            $venv_python = __DIR__ . '/../.venv/Scripts/python.exe';
+            if (file_exists($venv_python)) {
+                $python = $venv_python;
+                $python_check = $venv_python; // Already verified it exists
+            } else {
+                // Fallback to system Python
+                $python = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
+                $python_check = PHP_OS_FAMILY === 'Windows' 
+                    ? shell_exec("where $python 2>NUL") 
+                    : shell_exec("which $python 2>/dev/null");
+            }
             
             if (empty($python_check)) {
                 $checks_passed = false;
-                $error_details[] = "Python is not installed or not in PATH (looking for '$python')";
+                $error_details[] = "Python is not installed or not in PATH";
             }
             
             // Check if database exists
@@ -113,12 +121,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Start monitoring in background
                 if (PHP_OS_FAMILY === 'Windows') {
                     // Use WScript to launch completely detached from PHP process
+                    // Escape backslashes for VBScript
+                    $python_escaped = str_replace('\\', '\\\\', $python);
+                    $script_escaped = str_replace('\\', '\\\\', $script_path);
+                    
                     $vbs_content = "Set WshShell = CreateObject(\"WScript.Shell\")\n";
-                    $vbs_content .= "WshShell.Run \"$python \"\"$script_path\"\" --continuous --interval $interval --log\", 0, False\n";
+                    $vbs_content .= "WshShell.Run \"\"\"$python_escaped\"\" \"\"$script_escaped\"\" --continuous --interval $interval --log\", 0, False\n";
                     $vbs_file = $data_dir . '/start_monitor.vbs';
                     file_put_contents($vbs_file, $vbs_content);
                     exec("wscript //nologo \"$vbs_file\"");
                     // Clean up VBS file after a moment
+                    sleep(1);
                     @unlink($vbs_file);
                 } else {
                     $command = "$python \"$script_path\" --continuous --interval $interval --log > /dev/null 2>&1 &";
