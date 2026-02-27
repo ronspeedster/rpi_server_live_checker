@@ -90,22 +90,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Check if Python is available
-            // First try virtual environment (preferred)
-            $venv_python = __DIR__ . '/../.venv/Scripts/python.exe';
-            if (file_exists($venv_python)) {
-                $python = $venv_python;
-                $python_check = $venv_python; // Already verified it exists
+            $python = null;
+            $python_check = '';
+            
+            // Prefer project venv, then system python3/python
+            $python_candidates = [];
+            if (PHP_OS_FAMILY === 'Windows') {
+                $python_candidates[] = __DIR__ . '/../.venv/Scripts/python.exe';
+                $python_candidates[] = __DIR__ . '/../.venv/Scripts/python3.exe';
+                $python_candidates[] = 'python';
+                $python_candidates[] = 'python3';
             } else {
-                // Fallback to system Python
-                $python = PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
-                $python_check = PHP_OS_FAMILY === 'Windows' 
-                    ? shell_exec("where $python 2>NUL") 
-                    : shell_exec("which $python 2>/dev/null");
+                $python_candidates[] = __DIR__ . '/../.venv/bin/python3';
+                $python_candidates[] = __DIR__ . '/../.venv/bin/python';
+                $python_candidates[] = 'python3';
+                $python_candidates[] = 'python';
             }
             
-            if (empty($python_check)) {
+            foreach ($python_candidates as $candidate) {
+                if (strpos($candidate, DIRECTORY_SEPARATOR) !== false) {
+                    // Absolute path candidate
+                    if (file_exists($candidate)) {
+                        $python = $candidate;
+                        $python_check = $candidate;
+                        break;
+                    }
+                } else {
+                    // Command in PATH
+                    $check_cmd = PHP_OS_FAMILY === 'Windows'
+                        ? "where $candidate 2>NUL"
+                        : "which $candidate 2>/dev/null";
+                    $found = shell_exec($check_cmd);
+                    if (!empty($found)) {
+                        $python = trim($candidate);
+                        $python_check = $found;
+                        break;
+                    }
+                }
+            }
+            
+            if (empty($python_check) || empty($python)) {
                 $checks_passed = false;
-                $error_details[] = "Python is not installed or not in PATH";
+                $error_details[] = "Python is not installed or not in PATH (checked venv and system python/python3)";
             }
             
             // Check if database exists
