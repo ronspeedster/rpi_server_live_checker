@@ -35,7 +35,13 @@ def log_message(message, log_file=None):
     """Print message and optionally write to log file."""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     log_line = f"[{timestamp}] {message}"
-    print(log_line, flush=True)
+    
+    # Print to stdout with error handling for encoding issues
+    try:
+        print(log_line, flush=True)
+    except UnicodeEncodeError:
+        # Fallback for Windows console encoding issues
+        print(log_line.encode('ascii', errors='replace').decode('ascii'), flush=True)
     
     if log_file:
         try:
@@ -242,7 +248,7 @@ def ping_cycle(log_file=None):
         name = device['name']
         ip_address = device['ip_address']
         
-        log_message(f"  → {name} ({ip_address})...", log_file)
+        log_message(f"  -> {name} ({ip_address})...", log_file)
         
         result = ping_device(ip_address)
         
@@ -256,7 +262,7 @@ def ping_cycle(log_file=None):
         )
         
         # Log result
-        status_icon = '✓' if result['status'] == 'ONLINE' else '✗'
+        status_icon = '[OK]' if result['status'] == 'ONLINE' else '[FAIL]'
         rtt_info = f" [{result['rtt_ms']}ms]" if result['rtt_ms'] else ""
         log_message(f"    {status_icon} {result['status']}{rtt_info} - {result['message']}", log_file)
     
