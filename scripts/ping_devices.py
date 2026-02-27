@@ -3,6 +3,7 @@
 Network Device Ping Monitor
 Pings all active devices and logs results to the database.
 Can run in single-shot mode or continuous monitoring mode.
+Sends email/SMS alerts when devices are offline for 5+ minutes.
 """
 
 import sqlite3
@@ -14,8 +15,11 @@ import time
 import argparse
 import signal
 import shutil
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Get the database path
 DB_PATH = Path(__file__).parent.parent / "data" / "network_monitor.sqlite"
@@ -64,6 +68,329 @@ def get_db_connection():
     except sqlite3.Error as e:
         print(f"Database connection error: {e}", file=sys.stderr)
         sys.exit(1)
+
+
+def load_email_config():
+    """Load email configuration from PHP config file."""
+    config_file = Path(__file__).parent.parent / "config.email.php"
+    config = {}
+
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+            # Parse PHP define() statements
+            import re
+
+            patterns = {
+                "host": r"define\('SMTP_HOST',\s*'([^']+)'\)",
+                "port": r"define\('SMTP_PORT',\s*(\d+)\)",
+                "username": r"define\('SMTP_USERNAME',\s*'([^']+)'\)",
+                "password": r"define\('SMTP_PASSWORD',\s*'([^']+)'\)",
+                "from_email": r"define\('SMTP_FROM_EMAIL',\s*'([^']+)'\)",
+                "from_name": r"define\('SMTP_FROM_NAME',\s*'([^']+)'\)",
+            }
+
+            for key, pattern in patterns.items():
+                match = re.search(pattern, content)
+                if match:
+                    config[key] = match.group(1)
+
+        return config
+    except Exception as e:
+        print(f"Warning: Could not load email config: {e}", file=sys.stderr)
+        return None
+
+
+def send_email_alert(to_email, device_name, device_ip, alert_type="offline"):
+    """Send email alert for device status."""
+    config = load_email_config()
+
+    if not config:
+        print(
+            "Email config not available. Skipping email notification.", file=sys.stderr
+        )
+        return False
+
+    try:
+        # Create message
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"⚠️ Device Alert: {device_name} is {alert_type.upper()}"
+        msg["From"] = (
+            f"{config.get('from_name', 'Network Monitor')} <{config['from_email']}>"
+        )
+        msg["To"] = to_email
+
+        # Create HTML body - using same template as EmailHelper.php
+        color = "#dc3545"  # Red for offline
+        icon = "⚠️"
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: {color}; color: white; padding: 20px; border-radius: 5px 5px 0 0; }}
+                .content {{ background: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; }}
+                .footer {{ background: #e9ecef; padding: 15px; text-align: center; font-size: 12px; color: #6c757d; border-radius: 0 0 5px 5px; }}
+                .detail {{ margin: 10px 0; }}
+                .label {{ font-weight: bold; display: inline-block; width: 120px; }}
+                .value {{ color: #495057; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2 style='margin: 0;'>{icon} Device Alert: {alert_type.upper()}</h2>
+                </div>
+                <div class='content'>
+                    <h3>Device Status Change Detected</h3>
+                    <div class='detail'>
+                        <span class='label'>Device Name:</span>
+                        <span class='value'>{device_name}</span>
+                    </div>
+                    <div class='detail'>
+                        <span class='label'>IP Address:</span>
+                        <span class='value'>{device_ip}</span>
+                    </div>
+                    <div class='detail'>
+                        <span class='label'>Status:</span>
+                        <span class='value' style='color: {color}; font-weight: bold;'>{alert_type.upper()}</span>
+                    </div>
+                    <div class='detail'>
+                        <span class='label'>Time:</span>
+                        <span class='value'>{timestamp}</span>
+                    </div>
+                </div>
+                <div class='footer'>
+                    This is an automated message from Network Monitor System.<br>
+                    Please do not reply to this email.
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Create plain text version
+        text = f"""
+Network Device Alert
+
+Device: {device_name}
+IP Address: {device_ip}
+Status: {alert_type.upper()}
+Time: {timestamp}
+
+This is an automated alert from your network monitoring system.
+        """
+
+        msg.attach(MIMEText(text, "plain"))
+        msg.attach(MIMEText(html, "html"))
+
+        # Send email
+        with smtplib.SMTP(config["host"], int(config["port"])) as server:
+            server.starttls()
+            server.login(config["username"], config["password"])
+            server.send_message(msg)
+
+        return True
+
+    except Exception as e:
+        print(f"Error sending email: {e}", file=sys.stderr)
+        return False
+
+
+def check_and_alert_device(
+    conn, device_id, device_name, device_ip, current_status, log_file=None
+):
+    """
+    Check if device needs alerting based on offline duration.
+
+    Logic:
+    - If device is offline for 5+ minutes, create alert and send notification
+    - If alert exists and 30+ minutes since last notification, send another
+    - If device is back online, resolve the alert
+    """
+    cursor = conn.cursor()
+
+    # Get device notification settings
+    cursor.execute(
+        """
+        SELECT notify_email, notify_sms, notify_email_user_id, notify_sms_user_id
+        FROM devices 
+        WHERE id = ?
+    """,
+        (device_id,),
+    )
+
+    device_settings = cursor.fetchone()
+
+    if not device_settings:
+        return
+
+    # Check if there's an active alert for this device
+    cursor.execute(
+        """
+        SELECT id, first_detected_at, last_notified_at
+        FROM alerts
+        WHERE device_id = ? AND status = 'active'
+    """,
+        (device_id,),
+    )
+
+    active_alert = cursor.fetchone()
+
+    if current_status == "OFFLINE":
+        # Check ping history to see if device has been offline for 5+ minutes
+        cursor.execute(
+            """
+            SELECT checked_at, status
+            FROM ping_logs
+            WHERE device_id = ?
+            ORDER BY checked_at DESC
+            LIMIT 10
+        """,
+            (device_id,),
+        )
+
+        recent_pings = cursor.fetchall()
+
+        if not recent_pings:
+            return
+
+        # Check if all recent pings (within 5 minutes) are OFFLINE
+        five_minutes_ago = datetime.now() - timedelta(minutes=5)
+        offline_duration = None
+
+        for ping in recent_pings:
+            ping_time = datetime.strptime(ping["checked_at"], "%Y-%m-%d %H:%M:%S")
+            if ping_time < five_minutes_ago:
+                # Found a ping older than 5 minutes
+                if ping["status"] == "OFFLINE":
+                    offline_duration = datetime.now() - ping_time
+                break
+
+        # Device has been offline for 5+ minutes
+        if offline_duration and offline_duration >= timedelta(minutes=5):
+            if not active_alert:
+                # Create new alert
+                first_offline = recent_pings[-1]["checked_at"]
+                cursor.execute(
+                    """
+                    INSERT INTO alerts (device_id, status, first_detected_at, last_notified_at)
+                    VALUES (?, 'active', ?, ?)
+                """,
+                    (
+                        device_id,
+                        first_offline,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ),
+                )
+
+                conn.commit()
+
+                log_message(
+                    f"  ⚠️  ALERT CREATED: {device_name} offline for 5+ minutes",
+                    log_file,
+                )
+
+                # Send notification
+                send_notification(
+                    cursor, device_id, device_name, device_ip, device_settings, log_file
+                )
+
+            else:
+                # Check if 30 minutes passed since last notification
+                last_notified = datetime.strptime(
+                    active_alert["last_notified_at"], "%Y-%m-%d %H:%M:%S"
+                )
+                time_since_last_alert = datetime.now() - last_notified
+
+                if time_since_last_alert >= timedelta(minutes=30):
+                    # Send another notification
+                    cursor.execute(
+                        """
+                        UPDATE alerts 
+                        SET last_notified_at = ?
+                        WHERE id = ?
+                    """,
+                        (
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            active_alert["id"],
+                        ),
+                    )
+
+                    conn.commit()
+
+                    log_message(
+                        f"  ⚠️  RE-ALERT: {device_name} still offline after 30 minutes",
+                        log_file,
+                    )
+
+                    # Send notification
+                    send_notification(
+                        cursor,
+                        device_id,
+                        device_name,
+                        device_ip,
+                        device_settings,
+                        log_file,
+                    )
+
+    else:  # Device is ONLINE
+        if active_alert:
+            # Resolve the alert automatically
+            cursor.execute(
+                """
+                UPDATE alerts 
+                SET status = 'resolved', actioned_at = ?
+                WHERE id = ?
+            """,
+                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), active_alert["id"]),
+            )
+
+            conn.commit()
+
+            log_message(f"  ✓ ALERT RESOLVED: {device_name} is back online", log_file)
+
+
+def send_notification(
+    cursor, device_id, device_name, device_ip, device_settings, log_file=None
+):
+    """Send notification based on device settings."""
+
+    # Send email notification if enabled
+    if device_settings["notify_email"]:
+        # Get recipient email(s)
+        user_id = device_settings["notify_email_user_id"]
+
+        if user_id == 0 or user_id is None:
+            # Send to all users
+            cursor.execute(
+                "SELECT email FROM users WHERE email IS NOT NULL AND email != ''"
+            )
+            emails = [row["email"] for row in cursor.fetchall()]
+        else:
+            # Send to specific user
+            cursor.execute("SELECT email FROM users WHERE id = ?", (user_id,))
+            user = cursor.fetchone()
+            emails = [user["email"]] if user and user["email"] else []
+
+        # Send emails
+        for email in emails:
+            if send_email_alert(email, device_name, device_ip):
+                log_message(f"    📧 Email sent to {email}", log_file)
+            else:
+                log_message(f"    ❌ Failed to send email to {email}", log_file)
+
+    # SMS notification (placeholder for future implementation)
+    if device_settings["notify_sms"]:
+        log_message(
+            f"    📱 SMS notification configured (not yet implemented)", log_file
+        )
 
 
 def ping_device(ip_address, count=1, timeout=2):
@@ -269,6 +596,11 @@ def ping_cycle(log_file=None):
         # Log to database
         log_ping_result(
             conn, device_id, result["status"], result["rtt_ms"], result["message"]
+        )
+
+        # Check and manage alerts for this device
+        check_and_alert_device(
+            conn, device_id, name, ip_address, result["status"], log_file
         )
 
         # Log result

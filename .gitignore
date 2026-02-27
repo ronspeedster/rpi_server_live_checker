@@ -1,3 +1,15 @@
 .DS_Store
 data/monitor.log
 data/network_monitor.sqlite
+
+# Email credentials - DO NOT COMMIT
+config.email.php
+
+# Vendor directory (if using Composer)
+vendor/
+
+# PHPMailer (if manually installed)
+PHPMailer/
+
+# Python cache files
+*/__pycache__

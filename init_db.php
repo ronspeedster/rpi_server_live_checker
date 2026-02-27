@@ -58,17 +58,20 @@ function init_db(PDO $pdo): void {
         );
     ");
 
-    // Alerts (optional now, useful later)
+    // Alerts table for offline device notifications
     $pdo->exec("
         CREATE TABLE alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             device_id INTEGER NOT NULL,
-            alert_type TEXT NOT NULL,
-            sent_to TEXT,
-            sent_at TEXT,
-            status TEXT NOT NULL DEFAULT 'PENDING',
-            provider_msg TEXT,
-            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            status TEXT NOT NULL DEFAULT 'active',
+            first_detected_at TEXT NOT NULL,
+            last_notified_at TEXT,
+            actioned_at TEXT,
+            actioned_by INTEGER,
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE,
+            FOREIGN KEY (actioned_by) REFERENCES users(id) ON DELETE SET NULL
         );
     ");
 

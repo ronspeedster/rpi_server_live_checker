@@ -41,6 +41,25 @@
             <span>Ping Logs</span></a>
     </li>
 
+    <!-- Nav Item - Alerts -->
+    <li class="nav-item<?php echo ($active_page === 'alerts') ? ' active' : ''; ?>">
+        <a class="nav-link" href="<?php echo BASE_PATH; ?>monitor/alerts.php">
+            <i class="fas fa-fw fa-exclamation-triangle"></i>
+            <span>Alerts</span>
+            <?php
+            // Show active alert count badge
+            try {
+                $alertCount = db()->query("SELECT COUNT(*) FROM alerts WHERE status = 'active'")->fetchColumn();
+                if ($alertCount > 0) {
+                    echo '<span class="badge badge-danger badge-counter" style="margin-left: 5px;">' . $alertCount . '</span>';
+                }
+            } catch (PDOException $e) {
+                // Silently fail if alerts table doesn't exist yet
+            }
+            ?>
+        </a>
+    </li>
+
     <!-- Divider -->
     <hr class="sidebar-divider">
 
