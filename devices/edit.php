@@ -21,6 +21,10 @@ if (!$device_id) {
 
 $pdo = db();
 
+// Get list of users for notification dropdown
+$users_stmt = $pdo->query("SELECT id, username, first_name, last_name, email, phone FROM users ORDER BY first_name, last_name");
+$users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Fetch device data
 $stmt = $pdo->prepare("SELECT * FROM devices WHERE id = :id");
 $stmt->execute([':id' => $device_id]);
@@ -38,6 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ip_address = trim($_POST['ip_address'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
     $is_active = isset($_POST['is_active']) ? 1 : 0;
+    
+    // Notification settings
+    $notify_email = isset($_POST['notify_email']) ? 1 : 0;
+    $notify_sms = isset($_POST['notify_sms']) ? 1 : 0;
+    $notify_email_user_id = ($_POST['notify_email_user'] ?? 'all') === 'all' ? null : intval($_POST['notify_email_user']);
+    $notify_sms_user_id = ($_POST['notify_sms_user'] ?? 'all') === 'all' ? null : intval($_POST['notify_sms_user']);
 
     if (!$name || !$ip_address) {
         $error = 'Device name and IP address are required';
@@ -52,12 +62,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'A device with this IP address already exists';
             } else {
                 // Update device
-                $stmt = $pdo->prepare("UPDATE devices SET name = :name, ip_address = :ip, notes = :notes, is_active = :active WHERE id = :id");
+                $stmt = $pdo->prepare("UPDATE devices SET name = :name, ip_address = :ip, notes = :notes, is_active = :active, notify_email = :notify_email, notify_sms = :notify_sms, notify_email_user_id = :notify_email_user, notify_sms_user_id = :notify_sms_user WHERE id = :id");
                 $stmt->execute([
                     ':name' => $name,
                     ':ip' => $ip_address,
                     ':notes' => $notes ?: null,
                     ':active' => $is_active,
+                    ':notify_email' => $notify_email,
+                    ':notify_sms' => $notify_sms,
+                    ':notify_email_user' => $notify_email_user_id,
+                    ':notify_sms_user' => $notify_sms_user_id,
                     ':id' => $device_id
                 ]);
 
@@ -157,14 +171,74 @@ require_once __DIR__ . '/../includes/header.php';
                                             </div>
                                         </div>
 
-                                        <hr>
+                        <hr>
+                        <h6 class="font-weight-bold text-primary mb-3">Notification Settings</h6>
 
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save"></i> Update Device
-                                        </button>
-                                        <a href="index.php" class="btn btn-secondary">
-                                            <i class="fas fa-times"></i> Cancel
-                                        </a>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="notify_email" name="notify_email" 
+                                               <?php echo ($device['notify_email'] ?? 1) ? 'checked' : ''; ?>
+                                               onchange="toggleEmailUser(this.checked)">
+                                        <label class="custom-control-label" for="notify_email">
+                                            <i class="fas fa-envelope"></i> Send Email Notifications
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="email_user_group">
+                                    <label for="notify_email_user">Send To</label>
+                                    <select class="form-control" id="notify_email_user" name="notify_email_user">
+                                        <option value="all" <?php echo !isset($device['notify_email_user_id']) || !$device['notify_email_user_id'] ? 'selected' : ''; ?>>All Users with Email</option>
+                                        <?php foreach ($users as $user): ?>
+                                            <?php if ($user['email']): ?>
+                                                <option value="<?php echo $user['id']; ?>" <?php echo ($device['notify_email_user_id'] ?? null) == $user['id'] ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name'] . ' (' . $user['email'] . ')'); ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="notify_sms" name="notify_sms" 
+                                               <?php echo ($device['notify_sms'] ?? 1) ? 'checked' : ''; ?>
+                                               onchange="toggleSmsUser(this.checked)">
+                                        <label class="custom-control-label" for="notify_sms">
+                                            <i class="fas fa-sms"></i> Send SMS Notifications
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="sms_user_group">
+                                    <label for="notify_sms_user">Send To</label>
+                                    <select class="form-control" id="notify_sms_user" name="notify_sms_user">
+                                        <option value="all" <?php echo !isset($device['notify_sms_user_id']) || !$device['notify_sms_user_id'] ? 'selected' : ''; ?>>All Users with Phone</option>
+                                        <?php foreach ($users as $user): ?>
+                                            <?php if ($user['phone']): ?>
+                                                <option value="<?php echo $user['id']; ?>" <?php echo ($device['notify_sms_user_id'] ?? null) == $user['id'] ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name'] . ' (' . $user['phone'] . ')'); ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                        function toggleEmailUser(checked) {
+                            document.getElementById('email_user_group').style.display = checked ? 'block' : 'none';
+                        }
+                        function toggleSmsUser(checked) {
+                            document.getElementById('sms_user_group').style.display = checked ? 'block' : 'none';
+                        }
+                        // Initialize on page load
+                        toggleEmailUser(document.getElementById('notify_email').checked);
+                        toggleSmsUser(document.getElementById('notify_sms').checked);
+                        </script>
                                     </form>
                                 </div>
                             </div>

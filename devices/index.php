@@ -35,7 +35,13 @@ if (isset($_SESSION['device_error'])) {
 
 // Fetch all devices
 $pdo = db();
-$stmt = $pdo->query("SELECT id, name, ip_address, notes, is_active, created_at FROM devices ORDER BY name ASC");
+$stmt = $pdo->query("SELECT d.*, 
+    u_email.first_name as email_user_first, u_email.last_name as email_user_last,
+    u_sms.first_name as sms_user_first, u_sms.last_name as sms_user_last
+    FROM devices d
+    LEFT JOIN users u_email ON d.notify_email_user_id = u_email.id
+    LEFT JOIN users u_sms ON d.notify_sms_user_id = u_sms.id
+    ORDER BY name ASC");
 $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Page settings
@@ -99,9 +105,8 @@ require_once __DIR__ . '/../includes/header.php';
                                             <th>ID</th>
                                             <th>Name</th>
                                             <th>IP Address</th>
-                                            <th>Notes</th>
+                                            <th>Notifications</th>
                                             <th>Status</th>
-                                            <th>Created</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -109,17 +114,49 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php foreach ($devices as $device): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($device['id']); ?></td>
-                                            <td><?php echo htmlspecialchars($device['name']); ?></td>
-                                            <td><?php echo htmlspecialchars($device['ip_address']); ?></td>
-                                            <td><?php echo htmlspecialchars($device['notes'] ?? ''); ?></td>
                                             <td>
-                                                <?php if ($device['is_active']): ?>
-                                                    <span class="badge badge-success">Active</span>
-                                                <?php else: ?>
-                                                    <span class="badge badge-secondary">Inactive</span>
+                                                <strong><?php echo htmlspecialchars($device['name']); ?></strong>
+                                                <?php if ($device['notes']): ?>
+                                                    <br><small class="text-muted"><?php echo htmlspecialchars($device['notes']); ?></small>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo htmlspecialchars($device['created_at']); ?></td>
+                                            <td><code><?php echo htmlspecialchars($device['ip_address']); ?></code></td>
+                                            <td>
+                                                <?php if (($device['notify_email'] ?? 1)): ?>
+                                                    <span class="badge badge-info" title="Email notifications enabled">
+                                                        <i class="fas fa-envelope"></i>
+                                                        <?php 
+                                                        if ($device['notify_email_user_id']) {
+                                                            echo htmlspecialchars($device['email_user_first'] . ' ' . $device['email_user_last']);
+                                                        } else {
+                                                            echo 'All';
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (($device['notify_sms'] ?? 1)): ?>
+                                                    <span class="badge badge-success" title="SMS notifications enabled">
+                                                        <i class="fas fa-sms"></i>
+                                                        <?php 
+                                                        if ($device['notify_sms_user_id']) {
+                                                            echo htmlspecialchars($device['sms_user_first'] . ' ' . $device['sms_user_last']);
+                                                        } else {
+                                                            echo 'All';
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (!($device['notify_email'] ?? 1) && !($device['notify_sms'] ?? 1)): ?>
+                                                    <span class="text-muted">None</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($device['is_active']): ?>
+                                                    <span class="badge badge-success"><i class="fas fa-check"></i> Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge badge-secondary"><i class="fas fa-pause"></i> Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <a href="edit.php?id=<?php echo $device['id']; ?>" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i>

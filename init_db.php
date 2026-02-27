@@ -35,7 +35,13 @@ function init_db(PDO $pdo): void {
             ip_address TEXT NOT NULL UNIQUE,
             notes TEXT,
             is_active INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            notify_email INTEGER NOT NULL DEFAULT 1,
+            notify_sms INTEGER NOT NULL DEFAULT 1,
+            notify_email_user_id INTEGER,
+            notify_sms_user_id INTEGER,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (notify_email_user_id) REFERENCES users(id) ON DELETE SET NULL,
+            FOREIGN KEY (notify_sms_user_id) REFERENCES users(id) ON DELETE SET NULL
         );
     ");
 
