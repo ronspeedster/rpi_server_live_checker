@@ -28,6 +28,23 @@ $page_styles = '
     border-radius: 4px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    transition: height 0.3s ease;
+}
+
+#log-container.size-small {
+    height: 300px;
+}
+
+#log-container.size-medium {
+    height: 600px;
+}
+
+#log-container.size-large {
+    height: 900px;
+}
+
+#log-container.size-full {
+    height: calc(100vh - 300px);
 }
 
 #log-container .log-line {
@@ -71,6 +88,29 @@ $page_styles = '
 
 #auto-scroll-toggle {
     cursor: pointer;
+}
+
+.resize-btn.active {
+    background-color: #4e73df !important;
+    color: white !important;
+    border-color: #4e73df !important;
+}
+
+body.dark-mode .btn-outline-secondary {
+    color: #b0b0b0;
+    border-color: #505050;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #404040;
+    color: #e0e0e0;
+    border-color: #606060;
+}
+
+body.dark-mode .resize-btn.active {
+    background-color: #4e73df !important;
+    color: white !important;
+    border-color: #4e73df !important;
 }
 </style>
 ';
@@ -116,13 +156,31 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary">Log Output</h6>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="auto-scroll-toggle" checked>
-                                <label class="custom-control-label" for="auto-scroll-toggle">Auto-scroll</label>
+                            <div class="d-flex align-items-center">
+                                <!-- Size Controls -->
+                                <div class="btn-group btn-group-sm mr-3" role="group" aria-label="Resize log output">
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="small" title="Small (300px)">
+                                        <i class="fas fa-compress-alt"></i> S
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn active" data-size="medium" title="Medium (600px)">
+                                        <i class="fas fa-window-maximize"></i> M
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="large" title="Large (900px)">
+                                        <i class="fas fa-expand-alt"></i> L
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="full" title="Full Screen">
+                                        <i class="fas fa-arrows-alt"></i> XL
+                                    </button>
+                                </div>
+                                <!-- Auto-scroll Toggle -->
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="auto-scroll-toggle" checked>
+                                    <label class="custom-control-label" for="auto-scroll-toggle">Auto-scroll</label>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            <div id="log-container">
+                            <div id="log-container" class="size-medium">
                                 <div class="log-line log-header">Connecting to log stream...</div>
                             </div>
                         </div>
@@ -169,6 +227,28 @@ document.getElementById("clear-logs").addEventListener("click", function() {
     logContainer.innerHTML = "";
     logCount = 0;
     document.getElementById("log-count").textContent = "0";
+});
+
+// Resize log container
+document.querySelectorAll(".resize-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+        const size = this.getAttribute("data-size");
+        
+        // Remove all size classes
+        logContainer.classList.remove("size-small", "size-medium", "size-large", "size-full");
+        
+        // Add new size class
+        logContainer.classList.add("size-" + size);
+        
+        // Update active button
+        document.querySelectorAll(".resize-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        
+        // Scroll to bottom if auto-scroll is on
+        if (autoScroll) {
+            scrollToBottom();
+        }
+    });
 });
 
 // Scroll to bottom
