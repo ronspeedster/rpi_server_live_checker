@@ -35,7 +35,7 @@ if (isset($_SESSION['user_error'])) {
 
 // Fetch all users
 $pdo = db();
-$stmt = $pdo->query("SELECT id, username, first_name, last_name, email, role, need_password_change, created_at FROM users ORDER BY created_at DESC");
+$stmt = $pdo->query("SELECT id, username, first_name, last_name, email, phone, role, need_password_change, created_at FROM users ORDER BY created_at DESC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Page settings
@@ -99,11 +99,11 @@ require_once __DIR__ . '/../includes/header.php';
                                         <tr>
                                             <th>ID</th>
                                             <th>Username</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
+                                            <th>Name</th>
                                             <th>Email</th>
+                                            <th>Phone</th>
                                             <th>Role</th>
-                                            <th>Password Status</th>
+                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -112,9 +112,23 @@ require_once __DIR__ . '/../includes/header.php';
                                             <tr>
                                                 <td><?php echo htmlspecialchars($user['id']); ?></td>
                                                 <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                                <td><?php echo htmlspecialchars($user['first_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($user['last_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($user['email'] ?? '-'); ?></td>
+                                                <td><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></td>
+                                                <td>
+                                                    <?php if ($user['email']): ?>
+                                                        <i class="fas fa-envelope text-primary"></i>
+                                                        <small><?php echo htmlspecialchars($user['email']); ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if ($user['phone']): ?>
+                                                        <i class="fas fa-phone text-success"></i>
+                                                        <small><?php echo htmlspecialchars($user['phone']); ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <span class="badge badge-primary">
                                                         <?php echo htmlspecialchars($user['role']); ?>
@@ -123,11 +137,11 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <td>
                                                     <?php if ($user['need_password_change']): ?>
                                                         <span class="badge badge-warning">
-                                                            <i class="fas fa-exclamation-triangle"></i> Default Password
+                                                            <i class="fas fa-exclamation-triangle"></i> Default
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="badge badge-success">
-                                                            <i class="fas fa-check"></i> Changed
+                                                            <i class="fas fa-check"></i> Active
                                                         </span>
                                                     <?php endif; ?>
                                                 </td>

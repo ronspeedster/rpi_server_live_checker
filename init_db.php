@@ -20,6 +20,7 @@ function init_db(PDO $pdo): void {
             first_name TEXT NOT NULL DEFAULT 'Default First Name',
             last_name TEXT NOT NULL DEFAULT 'Default Last Name',
             email TEXT,
+            phone TEXT,
             role TEXT NOT NULL DEFAULT 'admin',
             need_password_change INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))

@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name = trim($_POST['first_name'] ?? '');
     $last_name = trim($_POST['last_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
     $new_password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $role = $_POST['role'] ?? 'admin';
@@ -51,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Password must be at least 6 characters long';
     } elseif ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address';
+    } elseif ($phone && !preg_match('/^\+?[1-9]\d{1,14}$/', $phone)) {
+        $error = 'Invalid phone number. Please use international format with area code (e.g., +1234567890)';
     } else {
         try {
             // Check if username already exists (except for current user)
@@ -63,25 +66,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($new_password) {
                     // Update with new password
                     $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare("UPDATE users SET username = :username, password_hash = :password_hash, first_name = :first_name, last_name = :last_name, email = :email, role = :role, need_password_change = :need_password_change WHERE id = :id");
+                    $stmt = $pdo->prepare("UPDATE users SET username = :username, password_hash = :password_hash, first_name = :first_name, last_name = :last_name, email = :email, phone = :phone, role = :role, need_password_change = :need_password_change WHERE id = :id");
                     $stmt->execute([
                         ':username' => $new_username,
                         ':password_hash' => $password_hash,
                         ':first_name' => $first_name,
                         ':last_name' => $last_name,
                         ':email' => $email ?: null,
+                        ':phone' => $phone ?: null,
                         ':role' => $role,
                         ':need_password_change' => $need_password_change,
                         ':id' => $user_id
                     ]);
                 } else {
                     // Update without changing password
-                    $stmt = $pdo->prepare("UPDATE users SET username = :username, first_name = :first_name, last_name = :last_name, email = :email, role = :role, need_password_change = :need_password_change WHERE id = :id");
+                    $stmt = $pdo->prepare("UPDATE users SET username = :username, first_name = :first_name, last_name = :last_name, email = :email, phone = :phone, role = :role, need_password_change = :need_password_change WHERE id = :id");
                     $stmt->execute([
                         ':username' => $new_username,
                         ':first_name' => $first_name,
                         ':last_name' => $last_name,
                         ':email' => $email ?: null,
+                        ':phone' => $phone ?: null,
                         ':role' => $role,
                         ':need_password_change' => $need_password_change,
                         ':id' => $user_id
@@ -201,12 +206,17 @@ require_once __DIR__ . '/../includes/header.php';
                                             <input type="email" class="form-control" id="email" 
                                                    name="email" 
                                                    value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>">
-                                            <small class="form-text text-muted">Optional - Used for password recovery</small>
-                                        </div>
+                            <small class="form-text text-muted">Optional - Used for notifications and password recovery</small>
+                        </div>
 
-                                        <div class="form-group">
-                                            <label for="password">New Password</label>
-                                            <input type="password" class="form-control" id="password" 
+                        <div class="form-group">
+                            <label for="phone">Phone Number (SMS)</label>
+                            <input type="tel" class="form-control" id="phone" 
+                                   name="phone" 
+                                   placeholder="+1234567890"
+                                   pattern="\+?[1-9]\d{1,14}"
+                                   value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>">
+                            <small class="form-text text-muted">Optional - Must include country/area code (e.g., +1234567890) for SMS notifications</small>
                                                    name="password" minlength="6">
                                             <small class="form-text text-muted">Leave blank to keep current password. Must be at least 6 characters if changing.</small>
                                         </div>
