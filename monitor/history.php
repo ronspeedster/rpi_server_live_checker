@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -59,11 +59,11 @@ $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $page_title = 'Network Monitor - Ping Logs';
 $active_page = 'logs';
 $page_styles = '
-<link href="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link href="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 ';
 $page_scripts = '
-<script src="sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="' . BASE_PATH . 'sb_admin_theme/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 <script>
 $(document).ready(function() {
     $("#logsTable").DataTable({
@@ -74,13 +74,13 @@ $(document).ready(function() {
 </script>
 ';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -88,12 +88,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -133,7 +133,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </button>
 
                                 <?php if ($device_filter || $status_filter): ?>
-                                    <a href="logs.php" class="btn btn-secondary ml-2 mb-2">
+                                    <a href="history.php" class="btn btn-secondary ml-2 mb-2">
                                         <i class="fas fa-times"></i> Clear
                                     </a>
                                 <?php endif; ?>
@@ -210,4 +210,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -1,16 +1,16 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
 $device_id = intval($_GET['id'] ?? 0);
 
 if (!$device_id) {
-    header('Location: devices.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -35,5 +35,5 @@ try {
     $_SESSION['device_error'] = 'Error deleting device: ' . $e->getMessage();
 }
 
-header('Location: devices.php');
+header('Location: index.php');
 exit;

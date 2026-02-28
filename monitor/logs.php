@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -28,6 +28,23 @@ $page_styles = '
     border-radius: 4px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    transition: height 0.3s ease;
+}
+
+#log-container.size-small {
+    height: 300px;
+}
+
+#log-container.size-medium {
+    height: 600px;
+}
+
+#log-container.size-large {
+    height: 900px;
+}
+
+#log-container.size-full {
+    height: calc(100vh - 300px);
 }
 
 #log-container .log-line {
@@ -72,16 +89,39 @@ $page_styles = '
 #auto-scroll-toggle {
     cursor: pointer;
 }
+
+.resize-btn.active {
+    background-color: #4e73df !important;
+    color: white !important;
+    border-color: #4e73df !important;
+}
+
+body.dark-mode .btn-outline-secondary {
+    color: #b0b0b0;
+    border-color: #505050;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #404040;
+    color: #e0e0e0;
+    border-color: #606060;
+}
+
+body.dark-mode .resize-btn.active {
+    background-color: #4e73df !important;
+    color: white !important;
+    border-color: #4e73df !important;
+}
 </style>
 ';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -89,12 +129,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -106,7 +146,7 @@ require_once __DIR__ . '/includes/header.php';
                             <button class="btn btn-secondary" id="clear-logs">
                                 <i class="fas fa-eraser"></i> Clear
                             </button>
-                            <a href="monitor_control.php" class="btn btn-primary">
+                            <a href="control.php" class="btn btn-primary">
                                 <i class="fas fa-cog"></i> Control Panel
                             </a>
                         </div>
@@ -116,13 +156,31 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary">Log Output</h6>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="auto-scroll-toggle" checked>
-                                <label class="custom-control-label" for="auto-scroll-toggle">Auto-scroll</label>
+                            <div class="d-flex align-items-center">
+                                <!-- Size Controls -->
+                                <div class="btn-group btn-group-sm mr-3" role="group" aria-label="Resize log output">
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="small" title="Small (300px)">
+                                        <i class="fas fa-compress-alt"></i> S
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn active" data-size="medium" title="Medium (600px)">
+                                        <i class="fas fa-window-maximize"></i> M
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="large" title="Large (900px)">
+                                        <i class="fas fa-expand-alt"></i> L
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary resize-btn" data-size="full" title="Full Screen">
+                                        <i class="fas fa-arrows-alt"></i> XL
+                                    </button>
+                                </div>
+                                <!-- Auto-scroll Toggle -->
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="auto-scroll-toggle" checked>
+                                    <label class="custom-control-label" for="auto-scroll-toggle">Auto-scroll</label>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            <div id="log-container">
+                            <div id="log-container" class="size-medium">
                                 <div class="log-line log-header">Connecting to log stream...</div>
                             </div>
                         </div>
@@ -140,7 +198,7 @@ require_once __DIR__ . '/includes/header.php';
                         <i class="fas fa-info-circle"></i> 
                         This page shows real-time output from the monitoring service. 
                         If no logs appear, make sure the monitoring service is running from the 
-                        <a href="monitor_control.php">Control Panel</a>.
+                        <a href="control.php">Control Panel</a>.
                     </div>
 
                 </div>
@@ -169,6 +227,28 @@ document.getElementById("clear-logs").addEventListener("click", function() {
     logContainer.innerHTML = "";
     logCount = 0;
     document.getElementById("log-count").textContent = "0";
+});
+
+// Resize log container
+document.querySelectorAll(".resize-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+        const size = this.getAttribute("data-size");
+        
+        // Remove all size classes
+        logContainer.classList.remove("size-small", "size-medium", "size-large", "size-full");
+        
+        // Add new size class
+        logContainer.classList.add("size-" + size);
+        
+        // Update active button
+        document.querySelectorAll(".resize-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        
+        // Scroll to bottom if auto-scroll is on
+        if (autoScroll) {
+            scrollToBottom();
+        }
+    });
 });
 
 // Scroll to bottom
@@ -216,10 +296,15 @@ function updateStatus(connected) {
 // Poll for new logs
 function pollLogs() {
     fetch("stream_logs.php?position=" + lastPosition)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.content) {
-                const lines = data.content.split("\\n");
+                const lines = data.content.split(/\r?\n/);
                 lines.forEach(line => {
                     if (line.trim()) {
                         logContainer.innerHTML += formatLogLine(line);
@@ -249,5 +334,5 @@ setInterval(pollLogs, 1000); // Poll every second
 </script>
 ';
 
-require_once __DIR__ . '/includes/footer.php';
+require_once __DIR__ . '/../includes/footer.php';
 ?>

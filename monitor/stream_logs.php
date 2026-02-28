@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 
 header('Content-Type: application/json');
 
-$log_file = __DIR__ . '/data/monitor.log';
+$log_file = __DIR__ . '/../data/monitor.log';
 $position = intval($_GET['position'] ?? 0);
 
 // Check if log file exists

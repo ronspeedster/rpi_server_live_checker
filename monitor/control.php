@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -15,10 +15,10 @@ $need_password_change = $_SESSION['need_password_change'] ?? 0;
 $success_msg = '';
 $error_msg = '';
 
-// Paths
-$script_path = __DIR__ . '/scripts/ping_devices.py';
-$pid_file = __DIR__ . '/data/monitor.pid';
-$log_file = __DIR__ . '/data/monitor.log';
+// Paths (relative to project root since we're in monitor/ subfolder)
+$script_path = __DIR__ . '/../scripts/ping_devices.py';
+$pid_file = __DIR__ . '/../data/monitor.pid';
+$log_file = __DIR__ . '/../data/monitor.log';
 
 // Check if monitoring is running
 function is_monitoring_running() {
@@ -35,15 +35,11 @@ function is_monitoring_running() {
         return false;
     }
     
-    // Check if process is actually running (macOS/Linux)
+    // Check if process is actually running
     if (PHP_OS_FAMILY === 'Windows') {
-        // Windows: check with tasklist
-        exec("tasklist /FI \"IMAGENAME eq python*\" 2>NUL", $output);
-        foreach ($output as $line) {
-            if (stripos($line, 'python') !== false) {
-                return true;
-            }
-        }
+        // Windows: check with tasklist - use simpler, faster command
+        $output = shell_exec('tasklist /FI "IMAGENAME eq python.exe" /FO CSV /NH 2>NUL');
+        return $output !== null && stripos($output, 'python.exe') !== false;
     } else {
         // Unix-like: check with ps
         exec("ps aux | grep 'ping_devices.py' | grep -v grep", $output);
@@ -53,45 +49,151 @@ function is_monitoring_running() {
     return false;
 }
 
-// Get monitoring status
+// Get monitoring status (check after any potential redirects)
 $is_running = is_monitoring_running();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
+    // IMPORTANT: Close session immediately to prevent blocking other tabs
+    session_write_close();
+    
     if ($action === 'start') {
         $interval = intval($_POST['interval'] ?? 60);
+        $result_msg = '';
+        $result_type = 'error';
         
         if ($interval < 5) {
-            $error_msg = 'Interval must be at least 5 seconds';
+            $result_msg = 'Interval must be at least 5 seconds';
         } elseif ($is_running) {
-            $error_msg = 'Monitoring is already running';
+            $result_msg = 'Monitoring is already running';
         } else {
-            // Start monitoring in background
-            $python = 'python3'; // or 'python' on Windows
+            // Pre-flight checks
+            $checks_passed = true;
+            $error_details = [];
             
-            if (PHP_OS_FAMILY === 'Windows') {
-                $command = "start /B $python \"$script_path\" --continuous --interval $interval --log";
-            } else {
-                $command = "$python \"$script_path\" --continuous --interval $interval --log > /dev/null 2>&1 &";
+            // Check if script exists
+            if (!file_exists($script_path)) {
+                $checks_passed = false;
+                $error_details[] = "Python script not found at: " . basename($script_path);
             }
             
-            exec($command);
+            // Check if data directory exists and is writable
+            $data_dir = __DIR__ . '/../data';
+            if (!is_dir($data_dir)) {
+                $checks_passed = false;
+                $error_details[] = "Data directory does not exist";
+            } elseif (!is_writable($data_dir)) {
+                $checks_passed = false;
+                $error_details[] = "Data directory is not writable";
+            }
             
-            // Wait a moment to check if it started
-            sleep(1);
+            // Check if Python is available
+            $python = null;
+            $python_check = '';
             
-            if (is_monitoring_running()) {
-                $success_msg = "Monitoring service started successfully with {$interval}s interval";
-                $is_running = true;
+            // Prefer project venv, then system python3/python
+            $python_candidates = [];
+            if (PHP_OS_FAMILY === 'Windows') {
+                $python_candidates[] = __DIR__ . '/../.venv/Scripts/python.exe';
+                $python_candidates[] = __DIR__ . '/../.venv/Scripts/python3.exe';
+                $python_candidates[] = 'python';
+                $python_candidates[] = 'python3';
             } else {
-                $error_msg = 'Failed to start monitoring service';
+                $python_candidates[] = __DIR__ . '/../.venv/bin/python3';
+                $python_candidates[] = __DIR__ . '/../.venv/bin/python';
+                $python_candidates[] = 'python3';
+                $python_candidates[] = 'python';
+            }
+            
+            foreach ($python_candidates as $candidate) {
+                if (strpos($candidate, DIRECTORY_SEPARATOR) !== false) {
+                    // Absolute path candidate
+                    if (file_exists($candidate)) {
+                        $python = $candidate;
+                        $python_check = $candidate;
+                        break;
+                    }
+                } else {
+                    // Command in PATH
+                    $check_cmd = PHP_OS_FAMILY === 'Windows'
+                        ? "where $candidate 2>NUL"
+                        : "which $candidate 2>/dev/null";
+                    $found = shell_exec($check_cmd);
+                    if (!empty($found)) {
+                        $python = trim($candidate);
+                        $python_check = $found;
+                        break;
+                    }
+                }
+            }
+            
+            if (empty($python_check) || empty($python)) {
+                $checks_passed = false;
+                $error_details[] = "Python is not installed or not in PATH (checked venv and system python/python3)";
+            }
+            
+            // Check if database exists
+            $db_path = __DIR__ . '/../data/network_monitor.sqlite';
+            if (!file_exists($db_path)) {
+                $checks_passed = false;
+                $error_details[] = "Database not found. Please run database initialization first";
+            }
+            
+            if (!$checks_passed) {
+                $result_msg = 'Failed to start monitoring service: ' . implode('; ', $error_details);
+            } else {
+                // Start monitoring in background
+                if (PHP_OS_FAMILY === 'Windows') {
+                    // Use WScript to launch completely detached from PHP process
+                    // Escape backslashes for VBScript
+                    $python_escaped = str_replace('\\', '\\\\', $python);
+                    $script_escaped = str_replace('\\', '\\\\', $script_path);
+                    
+                    $vbs_content = "Set WshShell = CreateObject(\"WScript.Shell\")\n";
+                    $vbs_content .= "WshShell.Run \"\"\"$python_escaped\"\" \"\"$script_escaped\"\" --continuous --interval $interval --log\", 0, False\n";
+                    $vbs_file = $data_dir . '/start_monitor.vbs';
+                    file_put_contents($vbs_file, $vbs_content);
+                    exec("wscript //nologo \"$vbs_file\"");
+                    // Clean up VBS file after a moment
+                    sleep(1);
+                    @unlink($vbs_file);
+                } else {
+                    $command = "$python \"$script_path\" --continuous --interval $interval --log > /dev/null 2>&1 &";
+                    exec($command);
+                }
+                
+                // Give the process a brief moment to start
+                usleep(300000); // 0.3 seconds
+                
+                if (is_monitoring_running()) {
+                    $result_msg = "Monitoring service started successfully with {$interval}s interval";
+                    $result_type = 'success';
+                } else {
+                    $result_msg = "The process may have started but stopped immediately. Check the log file for details.";
+                }
             }
         }
+        
+        // Re-open session only to write the result
+        session_start();
+        if ($result_type === 'success') {
+            $_SESSION['success_msg'] = $result_msg;
+        } else {
+            $_SESSION['error_msg'] = $result_msg;
+        }
+        
+        // Redirect to prevent form resubmission
+        header('Location: control.php');
+        exit;
+        
     } elseif ($action === 'stop') {
+        $result_msg = '';
+        $result_type = 'error';
+        
         if (!$is_running) {
-            $error_msg = 'Monitoring is not running';
+            $result_msg = 'Monitoring is not running';
         } else {
             // Stop monitoring by killing the process
             if (PHP_OS_FAMILY === 'Windows') {
@@ -105,14 +207,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unlink($pid_file);
             }
             
-            // Wait a moment
-            sleep(1);
-            
-            $success_msg = 'Monitoring service stopped successfully';
-            $is_running = false;
+            $result_msg = 'Monitoring service stopped successfully';
+            $result_type = 'success';
         }
+        
+        // Re-open session only to write the result
+        session_start();
+        if ($result_type === 'success') {
+            $_SESSION['success_msg'] = $result_msg;
+        } else {
+            $_SESSION['error_msg'] = $result_msg;
+        }
+        
+        // Redirect to prevent form resubmission
+        header('Location: control.php');
+        exit;
     }
 }
+
+// Get messages from session (from redirect)
+if (isset($_SESSION['success_msg'])) {
+    $success_msg = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+if (isset($_SESSION['error_msg'])) {
+    $error_msg = $_SESSION['error_msg'];
+    unset($_SESSION['error_msg']);
+}
+
+// Refresh monitoring status (in case we just redirected after start/stop)
+$is_running = is_monitoring_running();
 
 // Get log file info
 $log_size = 0;
@@ -126,13 +250,13 @@ if (file_exists($log_file)) {
 $page_title = 'Network Monitor - Monitor Control';
 $active_page = 'monitor_control';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -140,12 +264,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <?php require_once __DIR__ . '/includes/alerts.php'; ?>
+                    <?php require_once __DIR__ . '/../includes/alerts.php'; ?>
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -206,7 +330,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
                                 </div>
                                 <div class="card-body">
-                                    <a href="monitor_logs.php" class="btn btn-info btn-block mb-3">
+                                    <a href="logs.php" class="btn btn-info btn-block mb-3">
                                         <i class="fas fa-stream"></i> View Live Logs
                                     </a>
                                     
@@ -214,7 +338,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <i class="fas fa-list"></i> View Historical Logs
                                     </a>
                                     
-                                    <a href="devices.php" class="btn btn-secondary btn-block">
+                                    <a href="../devices/" class="btn btn-secondary btn-block">
                                         <i class="fas fa-server"></i> Manage Devices
                                     </a>
                                     
@@ -226,7 +350,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <strong>Status:</strong> <span class="badge badge-success">Exists</span><br>
                                             <strong>Size:</strong> <?php echo number_format($log_size / 1024, 2); ?> KB
                                         </p>
-                                        <a href="<?php echo 'data/monitor.log'; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <a href="<?php echo BASE_PATH . 'data/monitor.log'; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                             <i class="fas fa-download"></i> Download Log
                                         </a>
                                     <?php else: ?>
@@ -269,4 +393,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
