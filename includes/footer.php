@@ -20,14 +20,14 @@
     </a>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="sb_admin_theme/vendor/jquery/jquery.min.js"></script>
-    <script src="sb_admin_theme/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo BASE_PATH; ?>sb_admin_theme/vendor/jquery/jquery.min.js"></script>
+    <script src="<?php echo BASE_PATH; ?>sb_admin_theme/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
-    <script src="sb_admin_theme/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="<?php echo BASE_PATH; ?>sb_admin_theme/vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for all pages-->
-    <script src="sb_admin_theme/js/sb-admin-2.min.js"></script>
+    <script src="<?php echo BASE_PATH; ?>sb_admin_theme/js/sb-admin-2.min.js"></script>
 
     <!-- Theme Toggle Script -->
     <script>

@@ -28,12 +28,12 @@
             <!-- Dropdown - User Information -->
             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                 aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="change_password.php">
+                <a class="dropdown-item" href="<?php echo BASE_PATH; ?>change_password.php">
                     <i class="fas fa-key fa-sm fa-fw mr-2 text-gray-400"></i>
                     Change Password
                 </a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="logout.php">
+                <a class="dropdown-item" href="<?php echo BASE_PATH; ?>logout.php">
                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                     Logout
                 </a>

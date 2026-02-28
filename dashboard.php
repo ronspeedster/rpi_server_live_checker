@@ -98,7 +98,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Devices Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <a href="devices.php" class="text-decoration-none">
+                            <a href="devices/" class="text-decoration-none">
                                 <div class="card border-left-primary shadow h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
@@ -118,7 +118,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Online Devices Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <a href="logs.php?status=ONLINE" class="text-decoration-none">
+                            <a href="monitor/history.php?status=ONLINE" class="text-decoration-none">
                                 <div class="card border-left-success shadow h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
@@ -138,7 +138,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Offline Devices Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <a href="logs.php?status=OFFLINE" class="text-decoration-none">
+                            <a href="monitor/history.php?status=OFFLINE" class="text-decoration-none">
                                 <div class="card border-left-danger shadow h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
@@ -158,7 +158,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Alerts Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <a href="logs.php?status=OFFLINE" class="text-decoration-none">
+                            <a href="monitor/alerts.php" class="text-decoration-none">
                                 <div class="card border-left-warning shadow h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">

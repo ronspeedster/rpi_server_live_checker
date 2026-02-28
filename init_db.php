@@ -20,6 +20,7 @@ function init_db(PDO $pdo): void {
             first_name TEXT NOT NULL DEFAULT 'Default First Name',
             last_name TEXT NOT NULL DEFAULT 'Default Last Name',
             email TEXT,
+            phone TEXT,
             role TEXT NOT NULL DEFAULT 'admin',
             need_password_change INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -34,7 +35,13 @@ function init_db(PDO $pdo): void {
             ip_address TEXT NOT NULL UNIQUE,
             notes TEXT,
             is_active INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            notify_email INTEGER NOT NULL DEFAULT 1,
+            notify_sms INTEGER NOT NULL DEFAULT 1,
+            notify_email_user_id INTEGER,
+            notify_sms_user_id INTEGER,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (notify_email_user_id) REFERENCES users(id) ON DELETE SET NULL,
+            FOREIGN KEY (notify_sms_user_id) REFERENCES users(id) ON DELETE SET NULL
         );
     ");
 
@@ -51,17 +58,20 @@ function init_db(PDO $pdo): void {
         );
     ");
 
-    // Alerts (optional now, useful later)
+    // Alerts table for offline device notifications
     $pdo->exec("
         CREATE TABLE alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             device_id INTEGER NOT NULL,
-            alert_type TEXT NOT NULL,
-            sent_to TEXT,
-            sent_at TEXT,
-            status TEXT NOT NULL DEFAULT 'PENDING',
-            provider_msg TEXT,
-            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            status TEXT NOT NULL DEFAULT 'active',
+            first_detected_at TEXT NOT NULL,
+            last_notified_at TEXT,
+            actioned_at TEXT,
+            actioned_by INTEGER,
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE,
+            FOREIGN KEY (actioned_by) REFERENCES users(id) ON DELETE SET NULL
         );
     ");
 

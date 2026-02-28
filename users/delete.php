@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -11,14 +11,14 @@ $user_id = intval($_GET['id'] ?? 0);
 
 if (!$user_id) {
     $_SESSION['user_error'] = 'Invalid user ID';
-    header('Location: users.php');
+    header('Location: index.php');
     exit;
 }
 
 // Prevent users from deleting themselves
 if ($user_id == $_SESSION['user_id']) {
     $_SESSION['user_error'] = 'You cannot delete your own account';
-    header('Location: users.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -32,7 +32,7 @@ try {
     
     if (!$user) {
         $_SESSION['user_error'] = 'User not found';
-        header('Location: users.php');
+        header('Location: index.php');
         exit;
     }
     
@@ -45,5 +45,5 @@ try {
     $_SESSION['user_error'] = 'Failed to delete user: ' . $e->getMessage();
 }
 
-header('Location: users.php');
+header('Location: index.php');
 exit;

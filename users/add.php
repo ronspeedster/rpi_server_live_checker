@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name = trim($_POST['first_name'] ?? '');
     $last_name = trim($_POST['last_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
     $new_password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $role = $_POST['role'] ?? 'admin';
@@ -32,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Password must be at least 6 characters long';
     } elseif ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address';
+    } elseif ($phone && !preg_match('/^\+?[1-9]\d{1,14}$/', $phone)) {
+        $error = 'Invalid phone number. Please use international format with area code (e.g., +1234567890)';
     } else {
         try {
             $pdo = db();
@@ -44,19 +47,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Insert new user
                 $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, first_name, last_name, email, role, need_password_change) VALUES (:username, :password_hash, :first_name, :last_name, :email, :role, :need_password_change)");
+                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, first_name, last_name, email, phone, role, need_password_change) VALUES (:username, :password_hash, :first_name, :last_name, :email, :phone, :role, :need_password_change)");
                 $stmt->execute([
                     ':username' => $new_username,
                     ':password_hash' => $password_hash,
                     ':first_name' => $first_name,
                     ':last_name' => $last_name,
                     ':email' => $email ?: null,
+                    ':phone' => $phone ?: null,
                     ':role' => $role,
                     ':need_password_change' => $need_password_change
                 ]);
 
                 $_SESSION['user_added'] = 'User "' . $new_username . '" has been created successfully';
-                header('Location: users.php');
+                header('Location: index.php');
                 exit;
             }
         } catch (Exception $e) {
@@ -69,13 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Network Monitor - Add User';
 $active_page = 'users';
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
+        <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -83,7 +87,7 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Content -->
             <div id="content">
 
-                <?php require_once __DIR__ . '/includes/topbar.php'; ?>
+                <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
@@ -91,7 +95,7 @@ require_once __DIR__ . '/includes/header.php';
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Add New User</h1>
-                        <a href="users.php" class="btn btn-secondary btn-icon-split">
+                        <a href="index.php" class="btn btn-secondary btn-icon-split">
                             <span class="icon text-white-50">
                                 <i class="fas fa-arrow-left"></i>
                             </span>
@@ -116,7 +120,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <h6 class="m-0 font-weight-bold text-primary">User Information</h6>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="user_add.php">
+                                    <form method="POST" action="add.php">
                                         <div class="form-group">
                                             <label for="username">Username <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="username" 
@@ -143,12 +147,17 @@ require_once __DIR__ . '/includes/header.php';
                                             <input type="email" class="form-control" id="email" 
                                                    name="email" 
                                                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
-                                            <small class="form-text text-muted">Optional - Used for password recovery</small>
-                                        </div>
+                            <small class="form-text text-muted">Optional - Used for notifications and password recovery</small>
+                        </div>
 
-                                        <div class="form-group">
-                                            <label for="password">Password <span class="text-danger">*</span></label>
-                                            <input type="password" class="form-control" id="password" 
+                        <div class="form-group">
+                            <label for="phone">Phone Number (SMS)</label>
+                            <input type="tel" class="form-control" id="phone" 
+                                   name="phone" 
+                                   placeholder="+1234567890"
+                                   pattern="\+?[1-9]\d{1,14}"
+                                   value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+                            <small class="form-text text-muted">Optional - Must include country/area code (e.g., +1234567890) for SMS notifications</small>
                                                    name="password" required minlength="6">
                                             <small class="form-text text-muted">Must be at least 6 characters long</small>
                                         </div>
@@ -182,7 +191,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Create User
                                         </button>
-                                        <a href="users.php" class="btn btn-secondary">
+                                        <a href="index.php" class="btn btn-secondary">
                                             <i class="fas fa-times"></i> Cancel
                                         </a>
                                     </form>
@@ -198,4 +207,4 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <!-- End of Main Content -->
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
