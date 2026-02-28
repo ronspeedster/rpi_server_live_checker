@@ -53,9 +53,9 @@ If you're using a trial account, you must verify recipient numbers:
 
 ## 📋 Current Configuration
 
-- **Account SID:** AC058dc61557f2bc76f2626... (configured ✅)
-- **Auth Token:** fed89dafeb90... (configured ✅)
-- **From Number:** ⚠️ UPDATE THIS IN CONFIG.SMS.PHP
+- **Account SID:** ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (set in `config.sms.php`)
+- **Auth Token:** xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (set in `config.sms.php`)
+- **From Number:** ⚠️ UPDATE THIS IN `config.sms.php`
 
 ---
 
